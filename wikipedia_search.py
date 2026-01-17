@@ -101,13 +101,13 @@ class WikipediaSearch:
             if not search_term:
                 return []
 
-            # Search Wikipedia
+            # Search Wikipedia - increased limit to get more results
             search_params = {
                 'action': 'query',
                 'format': 'json',
                 'list': 'search',
                 'srsearch': search_term,
-                'srlimit': 10,
+                'srlimit': 50,  # Increased from 10 to 50 for comprehensive results
                 'utf8': 1
             }
 

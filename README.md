@@ -18,6 +18,7 @@ A web application for solving Hebrew crossword puzzles by finding words that mat
 - 🔗 **Rich Results**: Each word shows definitions, translations, and links to multiple sources
 - ✨ **Comprehensive Coverage**: Includes common words from all Hebrew letters (א-ת)
 - 🌍 **Translation Support**: English translations from Morfix and contextual usage from Reverso
+- ♾️ **Unlimited Results**: Shows ALL matching words from ALL sources (no artificial limits!)
 
 ## 🚀 Quick Deploy (Free Hosting)
 

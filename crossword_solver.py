@@ -51,20 +51,16 @@ class CrosswordSolver:
 
         # Search in Wikipedia for additional context
         try:
-            # Get top results from dictionary to check Wikipedia
-            top_words = [r['word'] for r in results[:10]]
-            for word in top_words:
+            # Enrich ALL dictionary results with Wikipedia info (not just top 10)
+            for result in results:
+                word = result['word']
                 wiki_result = self.wiki_search.search(word)
                 if wiki_result:
-                    # Update the result with Wikipedia info
-                    for result in results:
-                        if result['word'] == word:
-                            result['description'] = wiki_result.get('description')
-                            result['wiki_url'] = wiki_result.get('url')
-                            result['source'] = 'Dictionary + Wikipedia'
-                            break
+                    result['description'] = wiki_result.get('description')
+                    result['wiki_url'] = wiki_result.get('url')
+                    result['source'] = 'Dictionary + Wikipedia'
 
-            # Also search Wikipedia directly with pattern
+            # Also search Wikipedia directly with pattern for more results
             if pattern and not pattern.startswith('_'):
                 wiki_results = self.wiki_search.search_pattern(pattern, pattern_length)
                 for wiki_word in wiki_results:
@@ -81,9 +77,9 @@ class CrosswordSolver:
         except Exception as e:
             logger.error(f"Error searching Wikipedia: {e}")
 
-        # Enrich results with online dictionary definitions
+        # Enrich ALL results with online dictionary definitions (not just top 10)
         try:
-            for result in results[:10]:  # Enrich top 10 results
+            for result in results:
                 if not result.get('description'):  # Only if no Wikipedia description
                     word = result['word']
                     online_result = self.online_dict.search_all_sources(word)
@@ -115,11 +111,13 @@ class CrosswordSolver:
         # Sort by source priority (Dictionary + Wikipedia first)
         results.sort(key=lambda x: (
             0 if 'Wikipedia' in x['source'] else
-            1 if 'Wiktionary' in x['source'] else
+            1 if 'Wiktionary' in x['source'] or 'Morfix' in x['source'] or 'Reverso' in x['source'] else
             2 if x['source'] == 'Hebrew Dictionary' else 3
         ))
 
-        return results[:50]  # Limit to 50 results
+        # Return ALL results (no limit)
+        logger.info(f"Returning {len(results)} total results")
+        return results
 
     def _matches_pattern(self, word: str, pattern: str, known_letters: str) -> bool:
         """
