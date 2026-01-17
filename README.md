@@ -10,7 +10,18 @@ A web application for solving Hebrew crossword puzzles by finding words that mat
 - 🎨 **RTL Support**: Full right-to-left Hebrew language support
 - 💡 **Smart Filtering**: Filter by word length and known letters
 
-## Installation
+## 🚀 Quick Deploy (Free Hosting)
+
+**Want to deploy this app to the web for free?**
+
+👉 **See [DEPLOYMENT.md](DEPLOYMENT.md)** for step-by-step guides to deploy on:
+- Render.com (Recommended - 5 minutes)
+- Railway.app
+- PythonAnywhere
+- Replit
+- Google Cloud Run
+
+## Installation (Local Development)
 
 ### Prerequisites
 
