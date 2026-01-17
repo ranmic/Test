@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פותר תשחץ עברי - Hebrew Crossword Solver</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>פותר תשחץ עברי</h1>
+        <p class="subtitle">Hebrew Crossword Solver</p>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="pattern">תבנית המילה (השתמש ב-_ לאות חסרה):</label>
+                <input type="text" id="pattern" placeholder="לדוגמה: _ש_ל_ם או ___ה_" dir="rtl">
+                <p class="hint">Pattern input (use _ for missing letters): e.g., _ש_ל_ם or ___ה_</p>
+            </div>
+
+            <div class="input-group">
+                <label for="knownLetters">אותיות ידועות (אופציונלי):</label>
+                <input type="text" id="knownLetters" placeholder="אותיות שאתה יודע שקיימות במילה" dir="rtl">
+                <p class="hint">Known letters (optional): Letters you know exist in the word</p>
+            </div>
+
+            <div class="input-group">
+                <label for="length">אורך המילה (אופציונלי):</label>
+                <input type="number" id="length" placeholder="מספר האותיות" min="1">
+                <p class="hint">Word length (optional): Number of letters</p>
+            </div>
+
+            <button id="searchBtn" onclick="searchWords()">חפש מילים</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>מחפש מילים...</p>
+        </div>
+
+        <div id="results" class="results">
+            <h2>תוצאות:</h2>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
