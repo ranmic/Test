@@ -4,8 +4,8 @@ A web application for solving Hebrew crossword puzzles by finding words that mat
 
 ## Features
 
-- 🔍 **Pattern Matching**: Find words matching patterns like `_ש_ל_ם` or `הר__` (where `_` represents unknown letters)
-- 📚 **Hebrew Dictionary**: Search through a comprehensive Hebrew word database (**1,169 words!**)
+- 🔍 **Pattern Matching**: Find words matching patterns like `_ש_ל_ם`, `הר__`, or `על__ם` (where `_` represents unknown letters)
+- 📚 **Hebrew Dictionary**: Search through a comprehensive Hebrew word database (**1,260 words!**)
 - 🌐 **Multi-Dictionary Integration**: Combines **6 online sources**:
   - **Hebrew Wikipedia** - Encyclopedic context and articles
   - **Hebrew Wiktionary** - Professional dictionary definitions
@@ -87,7 +87,11 @@ The server will start on `http://localhost:5000`
 - **Length**: `5`
 - **Result**: All 5-letter Hebrew words in the dictionary
 
-#### Example 4: Combined Search
+#### Example 4: Preposition+Pronoun Search
+- **Pattern**: `על__ם`
+- **Result**: 2 words found - עליכם (upon you), עליהם (upon them)
+
+#### Example 5: Combined Search
 - **Pattern**: `___ה_`
 - **Known Letters**: `ש`
 - **Result**: 5-letter words with 'ה' at position 4 and containing 'ש'
@@ -101,7 +105,7 @@ The server will start on `http://localhost:5000`
 ├── app.js                 # Frontend JavaScript
 ├── app.py                 # Flask backend server
 ├── crossword_solver.py    # Core solver logic
-├── hebrew_dictionary.py   # Hebrew word dictionary (1,169 words!)
+├── hebrew_dictionary.py   # Hebrew word dictionary (1,260 words!)
 ├── online_dictionary.py   # Online dictionary integration (Wiktionary)
 ├── wikipedia_search.py    # Wikipedia API integration
 ├── requirements.txt       # Python dependencies
@@ -171,7 +175,7 @@ dictionary.load_from_file('path/to/hebrew_words.txt')
   - **Academy of the Hebrew Language** - Official Hebrew dictionary
   - **GitHub Open Data** - Hebrew word frequency lists
 - **HTTP Client**: Requests library
-- **Dictionary Sources**: Local database (1,169 words) + 6 online dictionaries
+- **Dictionary Sources**: Local database (1,260 words) + 6 online dictionaries
 
 ## Features in Detail
 
