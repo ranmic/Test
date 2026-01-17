@@ -5,10 +5,12 @@ A web application for solving Hebrew crossword puzzles by finding words that mat
 ## Features
 
 - 🔍 **Pattern Matching**: Find words matching patterns like `_ש_ל_ם` (where `_` represents unknown letters)
-- 📚 **Hebrew Dictionary**: Search through a comprehensive Hebrew word database
+- 📚 **Hebrew Dictionary**: Search through a comprehensive Hebrew word database (240+ words)
 - 🌐 **Wikipedia Integration**: Get word definitions and context from Hebrew Wikipedia
+- 📖 **Online Dictionaries**: Automatic integration with Hebrew Wiktionary for word definitions
 - 🎨 **RTL Support**: Full right-to-left Hebrew language support
 - 💡 **Smart Filtering**: Filter by word length and known letters
+- 🔗 **Multiple Sources**: Combines local dictionary, Wikipedia, and Wiktionary for best results
 
 ## 🚀 Quick Deploy (Free Hosting)
 
@@ -88,9 +90,12 @@ The server will start on `http://localhost:5000`
 ├── app.js                 # Frontend JavaScript
 ├── app.py                 # Flask backend server
 ├── crossword_solver.py    # Core solver logic
-├── hebrew_dictionary.py   # Hebrew word dictionary
+├── hebrew_dictionary.py   # Hebrew word dictionary (240+ words)
+├── online_dictionary.py   # Online dictionary integration (Wiktionary)
 ├── wikipedia_search.py    # Wikipedia API integration
 ├── requirements.txt       # Python dependencies
+├── test_solver.py         # Test suite
+├── DEPLOYMENT.md          # Deployment guide
 └── README.md             # This file
 ```
 
@@ -147,8 +152,11 @@ dictionary.load_from_file('path/to/hebrew_words.txt')
 
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
 - **Backend**: Python, Flask
-- **APIs**: Wikipedia API for Hebrew content
+- **APIs**:
+  - Hebrew Wikipedia API for contextual information
+  - Hebrew Wiktionary API for word definitions
 - **HTTP Client**: Requests library
+- **Dictionary Sources**: Local database + Online dictionaries
 
 ## Features in Detail
 
@@ -169,12 +177,24 @@ The application queries Hebrew Wikipedia (`he.wikipedia.org`) to:
 - Provide context and descriptions
 - Link to full Wikipedia articles
 
+### Online Dictionary Integration
+
+The application integrates with Hebrew Wiktionary (`he.wiktionary.org`) to:
+
+- Enrich results with professional dictionary definitions
+- Provide linguistic context for Hebrew words
+- Link to detailed Wiktionary entries
+- Verify word validity in standard Hebrew dictionaries
+
 ### Multi-Source Results
 
-Results are prioritized:
-1. **Dictionary + Wikipedia**: Words found in dictionary with Wikipedia context
-2. **Hebrew Dictionary**: Words from local dictionary
-3. **Wikipedia**: Words found only in Wikipedia
+Results are automatically enriched from multiple sources and prioritized:
+1. **Dictionary + Wikipedia**: Words with encyclopedia context
+2. **Dictionary + Wiktionary**: Words with dictionary definitions
+3. **Hebrew Dictionary**: Words from local database
+4. **Wikipedia/Wiktionary**: Words found only online
+
+The app intelligently combines information from all sources to provide the most comprehensive results.
 
 ## Troubleshooting
 

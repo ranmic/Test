@@ -87,6 +87,15 @@ function createWordCard(result) {
         card.appendChild(link);
     }
 
+    if (result.wiktionary_url) {
+        const link = document.createElement('a');
+        link.className = 'wiki-link';
+        link.href = result.wiktionary_url;
+        link.target = '_blank';
+        link.textContent = 'הגדרה בוויקימילון / Definition in Wiktionary →';
+        card.appendChild(link);
+    }
+
     return card;
 }
 

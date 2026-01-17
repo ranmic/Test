@@ -2,6 +2,7 @@ import re
 from typing import List, Dict, Optional
 from hebrew_dictionary import HebrewDictionary
 from wikipedia_search import WikipediaSearch
+from online_dictionary import OnlineDictionary
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,6 +11,7 @@ class CrosswordSolver:
     def __init__(self):
         self.dictionary = HebrewDictionary()
         self.wiki_search = WikipediaSearch()
+        self.online_dict = OnlineDictionary()
 
     def find_matches(self, pattern: str, known_letters: str = '', length: Optional[int] = None) -> List[Dict]:
         """
@@ -79,10 +81,26 @@ class CrosswordSolver:
         except Exception as e:
             logger.error(f"Error searching Wikipedia: {e}")
 
+        # Enrich results with online dictionary definitions
+        try:
+            for result in results[:10]:  # Enrich top 10 results
+                if not result.get('description'):  # Only if no Wikipedia description
+                    word = result['word']
+                    online_result = self.online_dict.search_all_sources(word)
+                    if online_result:
+                        result['description'] = online_result.get('definition')
+                        if 'Wiktionary' in online_result.get('source', ''):
+                            result['source'] += ' + Wiktionary'
+                            result['wiktionary_url'] = online_result.get('url')
+
+        except Exception as e:
+            logger.error(f"Error enriching with online dictionary: {e}")
+
         # Sort by source priority (Dictionary + Wikipedia first)
         results.sort(key=lambda x: (
-            0 if x['source'] == 'Dictionary + Wikipedia' else
-            1 if x['source'] == 'Hebrew Dictionary' else 2
+            0 if 'Wikipedia' in x['source'] else
+            1 if 'Wiktionary' in x['source'] else
+            2 if x['source'] == 'Hebrew Dictionary' else 3
         ))
 
         return results[:50]  # Limit to 50 results
