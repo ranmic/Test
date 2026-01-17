@@ -16,6 +16,11 @@ class OnlineDictionary:
     def __init__(self):
         self.timeout = 5  # seconds
         self.cache = {}  # Simple in-memory cache
+        # Add proper User-Agent header for API requests
+        self.headers = {
+            'User-Agent': 'HebrewCrosswordSolver/1.0 (https://github.com/ranmic/Test; Educational Project)',
+            'Accept': 'application/json'
+        }
 
     def search_wiktionary(self, word: str) -> Optional[Dict]:
         """
@@ -39,7 +44,7 @@ class OnlineDictionary:
                 'explaintext': True,
             }
 
-            response = requests.get(url, params=params, timeout=self.timeout)
+            response = requests.get(url, params=params, headers=self.headers, timeout=self.timeout)
             response.raise_for_status()
             data = response.json()
 

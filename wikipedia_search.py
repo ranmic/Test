@@ -8,6 +8,11 @@ class WikipediaSearch:
     def __init__(self):
         self.base_url = "https://he.wikipedia.org/w/api.php"
         self.session = requests.Session()
+        # Add proper User-Agent header as required by Wikipedia API
+        self.session.headers.update({
+            'User-Agent': 'HebrewCrosswordSolver/1.0 (https://github.com/ranmic/Test; Educational Project)',
+            'Accept': 'application/json'
+        })
 
     def search(self, term: str) -> Optional[Dict]:
         """

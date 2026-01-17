@@ -4,13 +4,14 @@ A web application for solving Hebrew crossword puzzles by finding words that mat
 
 ## Features
 
-- 🔍 **Pattern Matching**: Find words matching patterns like `_ש_ל_ם` (where `_` represents unknown letters)
-- 📚 **Hebrew Dictionary**: Search through a comprehensive Hebrew word database (240+ words)
+- 🔍 **Pattern Matching**: Find words matching patterns like `_ש_ל_ם` or `הר__` (where `_` represents unknown letters)
+- 📚 **Hebrew Dictionary**: Search through a comprehensive Hebrew word database (**1,169 words!**)
 - 🌐 **Wikipedia Integration**: Get word definitions and context from Hebrew Wikipedia
 - 📖 **Online Dictionaries**: Automatic integration with Hebrew Wiktionary for word definitions
 - 🎨 **RTL Support**: Full right-to-left Hebrew language support
 - 💡 **Smart Filtering**: Filter by word length and known letters
 - 🔗 **Multiple Sources**: Combines local dictionary, Wikipedia, and Wiktionary for best results
+- ✨ **Comprehensive Coverage**: Includes common words from all Hebrew letters (א-ת)
 
 ## 🚀 Quick Deploy (Free Hosting)
 
@@ -68,15 +69,19 @@ The server will start on `http://localhost:5000`
 
 ### Examples
 
-#### Example 1: Pattern Search
-- **Pattern**: `_ש_ל_ם`
-- **Result**: Words with 'ש' in position 2 and 'ל' in position 4
+#### Example 1: Pattern Search for Names
+- **Pattern**: `הר__`
+- **Result**: 5 words found including הרצל, הרצי, הרים, הרבה, הרוג
 
-#### Example 2: Length Search
+#### Example 2: Pattern Search
+- **Pattern**: `א_ג_ת`
+- **Result**: Words like אוגדת (5 letters with 'א' at position 1, 'ג' at position 3, 'ת' at position 5)
+
+#### Example 3: Length Search
 - **Length**: `5`
 - **Result**: All 5-letter Hebrew words in the dictionary
 
-#### Example 3: Combined Search
+#### Example 4: Combined Search
 - **Pattern**: `___ה_`
 - **Known Letters**: `ש`
 - **Result**: 5-letter words with 'ה' at position 4 and containing 'ש'
@@ -90,7 +95,7 @@ The server will start on `http://localhost:5000`
 ├── app.js                 # Frontend JavaScript
 ├── app.py                 # Flask backend server
 ├── crossword_solver.py    # Core solver logic
-├── hebrew_dictionary.py   # Hebrew word dictionary (240+ words)
+├── hebrew_dictionary.py   # Hebrew word dictionary (1,169 words!)
 ├── online_dictionary.py   # Online dictionary integration (Wiktionary)
 ├── wikipedia_search.py    # Wikipedia API integration
 ├── requirements.txt       # Python dependencies
