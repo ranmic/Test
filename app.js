@@ -92,8 +92,46 @@ function createWordCard(result) {
         link.className = 'wiki-link';
         link.href = result.wiktionary_url;
         link.target = '_blank';
-        link.textContent = 'הגדרה בוויקימילון / Definition in Wiktionary →';
+        link.textContent = 'הגדרה בוויקימילון / Wiktionary →';
         card.appendChild(link);
+    }
+
+    if (result.morfix_url) {
+        const link = document.createElement('a');
+        link.className = 'wiki-link';
+        link.href = result.morfix_url;
+        link.target = '_blank';
+        link.textContent = 'תרגום במורפיקס / Morfix Translation →';
+        card.appendChild(link);
+    }
+
+    if (result.reverso_url) {
+        const link = document.createElement('a');
+        link.className = 'wiki-link';
+        link.href = result.reverso_url;
+        link.target = '_blank';
+        link.textContent = 'דוגמאות בהקשר / Context Examples →';
+        card.appendChild(link);
+    }
+
+    if (result.academy_url) {
+        const link = document.createElement('a');
+        link.className = 'wiki-link';
+        link.href = result.academy_url;
+        link.target = '_blank';
+        link.textContent = 'האקדמיה ללשון העברית / Academy Dictionary →';
+        card.appendChild(link);
+    }
+
+    // Display translation if available
+    if (result.translation) {
+        const trans = document.createElement('div');
+        trans.className = 'word-translation';
+        trans.textContent = `Translation: ${result.translation}`;
+        trans.style.fontStyle = 'italic';
+        trans.style.marginTop = '8px';
+        trans.style.color = '#555';
+        card.appendChild(trans);
     }
 
     return card;

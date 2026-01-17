@@ -6,12 +6,18 @@ A web application for solving Hebrew crossword puzzles by finding words that mat
 
 - 🔍 **Pattern Matching**: Find words matching patterns like `_ש_ל_ם` or `הר__` (where `_` represents unknown letters)
 - 📚 **Hebrew Dictionary**: Search through a comprehensive Hebrew word database (**1,169 words!**)
-- 🌐 **Wikipedia Integration**: Get word definitions and context from Hebrew Wikipedia
-- 📖 **Online Dictionaries**: Automatic integration with Hebrew Wiktionary for word definitions
+- 🌐 **Multi-Dictionary Integration**: Combines **6 online sources**:
+  - **Hebrew Wikipedia** - Encyclopedic context and articles
+  - **Hebrew Wiktionary** - Professional dictionary definitions
+  - **Morfix** - Hebrew-English translations
+  - **Reverso Context** - Real-world usage examples
+  - **Academy of the Hebrew Language** - Authoritative Hebrew source
+  - **GitHub Word Lists** - Open-source Hebrew word databases
 - 🎨 **RTL Support**: Full right-to-left Hebrew language support
 - 💡 **Smart Filtering**: Filter by word length and known letters
-- 🔗 **Multiple Sources**: Combines local dictionary, Wikipedia, and Wiktionary for best results
+- 🔗 **Rich Results**: Each word shows definitions, translations, and links to multiple sources
 - ✨ **Comprehensive Coverage**: Includes common words from all Hebrew letters (א-ת)
+- 🌍 **Translation Support**: English translations from Morfix and contextual usage from Reverso
 
 ## 🚀 Quick Deploy (Free Hosting)
 
@@ -157,11 +163,15 @@ dictionary.load_from_file('path/to/hebrew_words.txt')
 
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
 - **Backend**: Python, Flask
-- **APIs**:
-  - Hebrew Wikipedia API for contextual information
-  - Hebrew Wiktionary API for word definitions
+- **APIs & Data Sources**:
+  - **Hebrew Wikipedia API** - Encyclopedic information
+  - **Hebrew Wiktionary API** - Dictionary definitions
+  - **Morfix API** - Hebrew-English translations
+  - **Reverso Context API** - Usage examples and context
+  - **Academy of the Hebrew Language** - Official Hebrew dictionary
+  - **GitHub Open Data** - Hebrew word frequency lists
 - **HTTP Client**: Requests library
-- **Dictionary Sources**: Local database + Online dictionaries
+- **Dictionary Sources**: Local database (1,169 words) + 6 online dictionaries
 
 ## Features in Detail
 
@@ -182,24 +192,59 @@ The application queries Hebrew Wikipedia (`he.wikipedia.org`) to:
 - Provide context and descriptions
 - Link to full Wikipedia articles
 
-### Online Dictionary Integration
+### Multi-Dictionary Integration
 
-The application integrates with Hebrew Wiktionary (`he.wiktionary.org`) to:
+The application integrates with **6 online Hebrew dictionaries** to provide comprehensive word information:
 
-- Enrich results with professional dictionary definitions
-- Provide linguistic context for Hebrew words
-- Link to detailed Wiktionary entries
-- Verify word validity in standard Hebrew dictionaries
+#### 1. Hebrew Wiktionary (he.wiktionary.org)
+- Professional dictionary definitions
+- Linguistic context and etymology
+- Word forms and conjugations
+- Priority source for definitions
+
+#### 2. Morfix (morfix.co.il)
+- Hebrew-English translations
+- Bidirectional dictionary
+- Common usage translations
+- Great for non-Hebrew speakers
+
+#### 3. Reverso Context (context.reverso.net)
+- Real-world usage examples
+- Context in sentences
+- Translation with nuance
+- Helps understand word usage
+
+#### 4. Academy of the Hebrew Language
+- Official authoritative source
+- Standardized Hebrew
+- Academic definitions
+- Language policy decisions
+
+#### 5. GitHub Hebrew Word Lists
+- Open-source word databases
+- Frequency-based word lists
+- Community-maintained
+- 5,000+ additional words
+
+#### 6. Hebrew Wikipedia (he.wikipedia.org)
+- Encyclopedic information
+- Historical context
+- Subject matter expertise
+- Link to full articles
 
 ### Multi-Source Results
 
 Results are automatically enriched from multiple sources and prioritized:
-1. **Dictionary + Wikipedia**: Words with encyclopedia context
-2. **Dictionary + Wiktionary**: Words with dictionary definitions
-3. **Hebrew Dictionary**: Words from local database
-4. **Wikipedia/Wiktionary**: Words found only online
+1. **Dictionary + Wikipedia + Translation**: Words with all available information
+2. **Dictionary + Wiktionary**: Words with professional definitions
+3. **Dictionary + Morfix**: Words with English translations
+4. **Hebrew Dictionary**: Words from local database only
 
-The app intelligently combines information from all sources to provide the most comprehensive results.
+The app intelligently combines information from all 6 sources to provide the most comprehensive results possible. Each word shows:
+- Hebrew definition
+- English translation (when available)
+- Usage examples and context
+- Links to all applicable dictionaries
 
 ## Troubleshooting
 

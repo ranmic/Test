@@ -89,9 +89,25 @@ class CrosswordSolver:
                     online_result = self.online_dict.search_all_sources(word)
                     if online_result:
                         result['description'] = online_result.get('definition')
-                        if 'Wiktionary' in online_result.get('source', ''):
-                            result['source'] += ' + Wiktionary'
+                        source_name = online_result.get('source', '')
+
+                        # Add source attribution
+                        if source_name:
+                            result['source'] += f' + {source_name}'
+
+                        # Add appropriate URL based on source
+                        if 'Wiktionary' in source_name:
                             result['wiktionary_url'] = online_result.get('url')
+                        elif 'Morfix' in source_name:
+                            result['morfix_url'] = online_result.get('url')
+                        elif 'Reverso' in source_name:
+                            result['reverso_url'] = online_result.get('url')
+                        elif 'Academy' in source_name:
+                            result['academy_url'] = online_result.get('url')
+
+                        # Add translation if available (from Morfix/Reverso)
+                        if 'translation' in online_result:
+                            result['translation'] = online_result.get('translation')
 
         except Exception as e:
             logger.error(f"Error enriching with online dictionary: {e}")
