@@ -227,12 +227,32 @@ class WikipediaSearch:
             # Search for the letter itself to find all words containing it
             logger.info(f"Using Wiktionary SEARCH API for words containing '{search_term}'...")
 
+            # FIRST: Check if specific word exists (for debugging)
+            test_word = 'היפרבולה'
+            test_params = {
+                'action': 'query',
+                'format': 'json',
+                'titles': test_word,
+                'prop': 'info'
+            }
+            try:
+                test_response = self.session.get(wiktionary_url, params=test_params, timeout=5)
+                test_data = test_response.json()
+                test_pages = test_data.get('query', {}).get('pages', {})
+                if '-1' not in test_pages:
+                    logger.info(f"✓ Test: '{test_word}' EXISTS as a Wiktionary page!")
+                else:
+                    logger.warning(f"✗ Test: '{test_word}' does NOT exist in Hebrew Wiktionary")
+            except Exception as e:
+                logger.debug(f"Test query error: {e}")
+
             # Search Wiktionary for pages containing the search term
+            # Use intitle: to search specifically in page titles
             search_params = {
                 'action': 'query',
                 'format': 'json',
                 'list': 'search',
-                'srsearch': search_term,
+                'srsearch': f'intitle:{search_term}',  # Search in titles containing the letter
                 'srlimit': 500,  # Get up to 500 results
                 'srnamespace': 0,  # Main namespace only
             }
@@ -243,7 +263,7 @@ class WikipediaSearch:
                 data = response.json()
 
                 search_results = data.get('query', {}).get('search', [])
-                logger.info(f"Wiktionary search returned {len(search_results)} pages")
+                logger.info(f"Wiktionary search returned {len(search_results)} pages for 'intitle:{search_term}'")
 
                 for item in search_results:
                     word = item['title']
