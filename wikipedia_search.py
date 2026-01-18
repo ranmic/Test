@@ -129,6 +129,35 @@ class WikipediaSearch:
 
             # STRATEGY 2: Search Wikipedia articles (original method)
             logger.info("Strategy 2: Searching Wikipedia articles...")
+
+            # FIRST: Check if specific word exists in Wikipedia (for debugging)
+            test_word = 'היפרבולה'
+            test_params = {
+                'action': 'query',
+                'format': 'json',
+                'titles': test_word,
+                'prop': 'info'
+            }
+            try:
+                test_response = self.session.get(self.base_url, params=test_params, timeout=5)
+                test_data = test_response.json()
+                test_pages = test_data.get('query', {}).get('pages', {})
+                if '-1' not in test_pages:
+                    logger.info(f"✓ Test: '{test_word}' EXISTS as a Wikipedia page!")
+                    # Add it directly to results if it matches pattern
+                    if length and len(test_word) == length and search_term in test_word:
+                        results.append({
+                            'word': test_word,
+                            'description': 'מילה מוויקיפדיה העברית - Hyperbola',
+                            'url': f"https://he.wikipedia.org/wiki/{test_word}"
+                        })
+                        seen_words.add(test_word)
+                        logger.info(f"✓ Added '{test_word}' directly to results!")
+                else:
+                    logger.warning(f"✗ Test: '{test_word}' does NOT exist in Hebrew Wikipedia")
+            except Exception as e:
+                logger.debug(f"Test query error: {e}")
+
             # Search Wikipedia - increased limit to get more results
             search_params = {
                 'action': 'query',

@@ -37,6 +37,13 @@ h1 {
     direction: ltr;
 }
 
+.version {
+    font-size: 0.75em;
+    color: #999;
+    font-weight: normal;
+    margin-left: 10px;
+}
+
 .input-section {
     background: #f8f9fa;
     padding: 30px;
