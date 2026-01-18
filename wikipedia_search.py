@@ -104,6 +104,22 @@ class WikipediaSearch:
 
             logger.info(f"Wikipedia searching for pattern '{pattern}' (search term: '{search_term}', length: {length})")
 
+            results = []
+            seen_words = set()
+
+            # STRATEGY 1: Search Wiktionary for comprehensive Hebrew word list
+            logger.info("Strategy 1: Searching Hebrew Wiktionary word lists...")
+            wiktionary_words = self._search_wiktionary_allpages(search_term, length)
+            logger.info(f"Wiktionary returned {len(wiktionary_words)} candidate words")
+
+            for word_data in wiktionary_words:
+                word = word_data['word']
+                if word not in seen_words:
+                    results.append(word_data)
+                    seen_words.add(word)
+
+            # STRATEGY 2: Search Wikipedia articles (original method)
+            logger.info("Strategy 2: Searching Wikipedia articles...")
             # Search Wikipedia - increased limit to get more results
             search_params = {
                 'action': 'query',
@@ -121,8 +137,6 @@ class WikipediaSearch:
             search_results = data.get('query', {}).get('search', [])
             logger.info(f"Wikipedia returned {len(search_results)} article results")
 
-            results = []
-            seen_words = set()
             all_extracted_words = []
 
             for item in search_results:
@@ -181,4 +195,64 @@ class WikipediaSearch:
 
         except Exception as e:
             logger.error(f"Error in Wikipedia pattern search: {e}")
+            return []
+
+    def _search_wiktionary_allpages(self, search_term: str, length: Optional[int] = None) -> List[Dict]:
+        """
+        Search Hebrew Wiktionary for all pages (words) starting with the search term.
+
+        Args:
+            search_term: Hebrew letters to search for
+            length: Required word length
+
+        Returns:
+            List of word dictionaries
+        """
+        try:
+            results = []
+
+            # For pattern matching, we want to get a broad list of Hebrew words
+            # Use Wiktionary's allpages API to get Hebrew words
+            wiktionary_url = "https://he.wiktionary.org/w/api.php"
+
+            # Try multiple starting letters from the search term to get more words
+            for start_letter in search_term[:2]:  # Use first 2 letters as starting points
+                params = {
+                    'action': 'query',
+                    'format': 'json',
+                    'list': 'allpages',
+                    'apfrom': start_letter,
+                    'aplimit': 500,  # Get up to 500 words
+                    'apnamespace': 0,  # Main namespace only
+                }
+
+                response = self.session.get(wiktionary_url, params=params, timeout=5)
+                response.raise_for_status()
+                data = response.json()
+
+                pages = data.get('query', {}).get('allpages', [])
+
+                for page in pages:
+                    word = page['title']
+
+                    # Only keep Hebrew words (filter out Latin, special chars, etc.)
+                    if not any('\u0590' <= c <= '\u05FF' for c in word):
+                        continue
+
+                    # Filter by length if specified
+                    if length and len(word) != length:
+                        continue
+
+                    # Check if word contains the search term
+                    if search_term in word:
+                        results.append({
+                            'word': word,
+                            'description': f'מילה מהוויקימילון העברי',
+                            'url': f"https://he.wiktionary.org/wiki/{word}"
+                        })
+
+            return results
+
+        except Exception as e:
+            logger.warning(f"Error searching Wiktionary allpages: {e}")
             return []
