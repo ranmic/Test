@@ -248,8 +248,10 @@ class OnlineDictionary:
         """
         # Check cache first
         if word in self.cache:
-            logger.debug(f"Cache hit for '{word}'")
+            logger.info(f"  ✓ Cache hit for '{word}'")
             return self.cache[word]
+
+        logger.info(f"  Searching online sources for '{word}'...")
 
         # Try each source in priority order
         sources = [
@@ -261,15 +263,19 @@ class OnlineDictionary:
 
         for source_name, search_func in sources:
             try:
+                logger.info(f"    Trying {source_name}...")
                 result = search_func(word)
                 if result:
-                    logger.debug(f"Found '{word}' in {source_name}")
+                    logger.info(f"    ✓ Found '{word}' in {source_name}")
                     self.cache[word] = result
                     return result
+                else:
+                    logger.info(f"    ✗ '{word}' not found in {source_name}")
             except Exception as e:
-                logger.debug(f"Error searching {source_name} for '{word}': {e}")
+                logger.warning(f"    ✗ Error searching {source_name} for '{word}': {e}")
                 continue
 
+        logger.info(f"  ✗ '{word}' not found in any online source")
         return None
 
     def search_pattern_in_hebrew_words(self, pattern: str, length: Optional[int] = None) -> List[str]:

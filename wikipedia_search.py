@@ -99,7 +99,10 @@ class WikipediaSearch:
             search_term = pattern.replace('_', '')
 
             if not search_term:
+                logger.info("Wikipedia pattern search: Empty search term after removing underscores")
                 return []
+
+            logger.info(f"Wikipedia searching for pattern '{pattern}' (search term: '{search_term}', length: {length})")
 
             # Search Wikipedia - increased limit to get more results
             search_params = {
@@ -115,24 +118,43 @@ class WikipediaSearch:
             response.raise_for_status()
             data = response.json()
 
+            search_results = data.get('query', {}).get('search', [])
+            logger.info(f"Wikipedia returned {len(search_results)} article results")
+
             results = []
-            for item in data.get('query', {}).get('search', []):
+            seen_words = set()
+
+            for item in search_results:
                 title = item['title']
-
-                # Filter by length if specified
-                if length and len(title) != length:
-                    continue
-
                 snippet = item.get('snippet', '').replace('<span class="searchmatch">', '').replace('</span>', '')
 
-                results.append({
-                    'word': title,
-                    'description': snippet[:200] + '...' if len(snippet) > 200 else snippet,
-                    'url': f"https://he.wikipedia.org/wiki/{title.replace(' ', '_')}"
-                })
+                # Extract individual words from title (Wikipedia titles can be phrases)
+                # Split on spaces and common punctuation
+                import re
+                words_in_title = re.findall(r'[\u0590-\u05FF]+', title)
+
+                for word in words_in_title:
+                    # Skip if we've already seen this word
+                    if word in seen_words:
+                        continue
+
+                    # Filter by length if specified
+                    if length and len(word) != length:
+                        continue
+
+                    seen_words.add(word)
+                    results.append({
+                        'word': word,
+                        'description': f"{title}: {snippet[:150]}" + ('...' if len(snippet) > 150 else ''),
+                        'url': f"https://he.wikipedia.org/wiki/{title.replace(' ', '_')}"
+                    })
+
+            logger.info(f"Wikipedia pattern search found {len(results)} unique words matching length {length}")
+            if results:
+                logger.info(f"Sample Wikipedia results: {[r['word'] for r in results[:5]]}")
 
             return results
 
         except Exception as e:
-            logger.error(f"Error in pattern search: {e}")
+            logger.error(f"Error in Wikipedia pattern search: {e}")
             return []
