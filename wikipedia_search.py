@@ -199,10 +199,10 @@ class WikipediaSearch:
 
     def _search_wiktionary_allpages(self, search_term: str, length: Optional[int] = None) -> List[Dict]:
         """
-        Search Hebrew Wiktionary for all pages (words) starting with the search term.
+        Search Hebrew Wiktionary for all pages (words) containing the search term.
 
         Args:
-            search_term: Hebrew letters to search for
+            search_term: Hebrew letters to search for (must be IN the word)
             length: Required word length
 
         Returns:
@@ -210,47 +210,66 @@ class WikipediaSearch:
         """
         try:
             results = []
+            seen_words = set()
 
             # For pattern matching, we want to get a broad list of Hebrew words
             # Use Wiktionary's allpages API to get Hebrew words
             wiktionary_url = "https://he.wiktionary.org/w/api.php"
 
-            # Try multiple starting letters from the search term to get more words
-            for start_letter in search_term[:2]:  # Use first 2 letters as starting points
+            # To find words containing "ב", we need to search from ALL Hebrew letters
+            # Get words starting with each Hebrew letter (alef to tav)
+            hebrew_letters = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ', 'ק', 'ר', 'ש', 'ת']
+
+            # If we have a length requirement, we can be more aggressive
+            # Get words from multiple starting letters
+            letters_to_search = hebrew_letters if length else search_term
+
+            for start_letter in letters_to_search[:10]:  # Limit to first 10 letters to avoid timeout
                 params = {
                     'action': 'query',
                     'format': 'json',
                     'list': 'allpages',
                     'apfrom': start_letter,
-                    'aplimit': 500,  # Get up to 500 words
+                    'aplimit': 500,  # Get up to 500 words per letter
                     'apnamespace': 0,  # Main namespace only
                 }
 
-                response = self.session.get(wiktionary_url, params=params, timeout=5)
-                response.raise_for_status()
-                data = response.json()
+                try:
+                    response = self.session.get(wiktionary_url, params=params, timeout=5)
+                    response.raise_for_status()
+                    data = response.json()
 
-                pages = data.get('query', {}).get('allpages', [])
+                    pages = data.get('query', {}).get('allpages', [])
 
-                for page in pages:
-                    word = page['title']
+                    for page in pages:
+                        word = page['title']
 
-                    # Only keep Hebrew words (filter out Latin, special chars, etc.)
-                    if not any('\u0590' <= c <= '\u05FF' for c in word):
-                        continue
+                        # Skip if already seen
+                        if word in seen_words:
+                            continue
 
-                    # Filter by length if specified
-                    if length and len(word) != length:
-                        continue
+                        # Only keep Hebrew words (filter out Latin, special chars, etc.)
+                        if not any('\u0590' <= c <= '\u05FF' for c in word):
+                            continue
 
-                    # Check if word contains the search term
-                    if search_term in word:
-                        results.append({
-                            'word': word,
-                            'description': f'מילה מהוויקימילון העברי',
-                            'url': f"https://he.wiktionary.org/wiki/{word}"
-                        })
+                        # Filter by length if specified
+                        if length and len(word) != length:
+                            continue
 
+                        # Check if word contains the search term
+                        if search_term in word:
+                            results.append({
+                                'word': word,
+                                'description': f'מילה מהוויקימילון העברי',
+                                'url': f"https://he.wiktionary.org/wiki/{word}"
+                            })
+                            seen_words.add(word)
+
+                except Exception as e:
+                    logger.debug(f"Error fetching Wiktionary page for '{start_letter}': {e}")
+                    continue
+
+            logger.info(f"Wiktionary allpages search found {len(results)} words containing '{search_term}' with length {length}")
             return results
 
         except Exception as e:
