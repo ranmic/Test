@@ -111,6 +111,15 @@ class WikipediaSearch:
             logger.info("Strategy 1: Searching Hebrew Wiktionary word lists...")
             wiktionary_words = self._search_wiktionary_allpages(search_term, length)
             logger.info(f"Wiktionary returned {len(wiktionary_words)} candidate words")
+            if wiktionary_words:
+                sample_wiktionary = [w['word'] for w in wiktionary_words[:10]]
+                logger.info(f"Sample Wiktionary words: {sample_wiktionary}")
+                # Check if היפרבולה is in the results
+                wiktionary_word_list = [w['word'] for w in wiktionary_words]
+                if 'היפרבולה' in wiktionary_word_list:
+                    logger.info("✓ Found היפרבולה in Wiktionary results!")
+                else:
+                    logger.warning("✗ היפרבולה NOT in Wiktionary results")
 
             for word_data in wiktionary_words:
                 word = word_data['word']

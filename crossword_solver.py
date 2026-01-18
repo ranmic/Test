@@ -84,19 +84,48 @@ class CrosswordSolver:
                 logger.info(f"✓ Wikipedia pattern search returned {len(wiki_results)} candidate words")
 
                 matched_count = 0
+                rejected_count = 0
+                rejected_samples = []
+
                 for wiki_word in wiki_results:
-                    if wiki_word['word'] not in seen_words:
-                        if self._matches_pattern(wiki_word['word'], pattern, known_letters):
+                    word = wiki_word['word']
+
+                    if word not in seen_words:
+                        # Skip multi-word phrases (crossword puzzles need single words)
+                        if ' ' in word:
+                            rejected_count += 1
+                            if len(rejected_samples) < 10:
+                                rejected_samples.append(f"{word} (contains space - multi-word phrase)")
+                            continue
+
+                        matches = self._matches_pattern(word, pattern, known_letters)
+
+                        if matches:
                             results.append({
-                                'word': wiki_word['word'],
+                                'word': word,
                                 'source': 'Wikipedia',
                                 'description': wiki_word.get('description'),
                                 'wiki_url': wiki_word.get('url')
                             })
-                            seen_words.add(wiki_word['word'])
+                            seen_words.add(word)
                             matched_count += 1
+                        else:
+                            rejected_count += 1
+                            if len(rejected_samples) < 10:
+                                # Log why it was rejected
+                                rejection_reason = []
+                                if len(word) != len(pattern):
+                                    rejection_reason.append(f"length {len(word)} != {len(pattern)}")
+                                else:
+                                    for i, p in enumerate(pattern):
+                                        if p != '_' and p != word[i]:
+                                            rejection_reason.append(f"pos {i}: expected '{p}', got '{word[i]}'")
+                                rejected_samples.append(f"{word} ({', '.join(rejection_reason)})")
 
                 logger.info(f"✓ {matched_count} Wikipedia words matched pattern '{pattern}'")
+                logger.info(f"✗ {rejected_count} Wikipedia words rejected by pattern matcher")
+                if rejected_samples:
+                    logger.info(f"Sample rejections: {rejected_samples[:5]}")
                 if matched_count > 0:
                     logger.info(f"  Sample Wikipedia matches: {list(seen_words)[:5]}")
 
