@@ -123,6 +123,7 @@ class WikipediaSearch:
 
             results = []
             seen_words = set()
+            all_extracted_words = []
 
             for item in search_results:
                 title = item['title']
@@ -133,7 +134,15 @@ class WikipediaSearch:
                 import re
                 words_in_title = re.findall(r'[\u0590-\u05FF]+', title)
 
-                for word in words_in_title:
+                # Also extract from snippet for more word candidates
+                words_in_snippet = re.findall(r'[\u0590-\u05FF]+', snippet)
+                all_words = words_in_title + words_in_snippet
+
+                for word in all_words:
+                    # Track all extracted words for debugging
+                    if word not in all_extracted_words:
+                        all_extracted_words.append(word)
+
                     # Skip if we've already seen this word
                     if word in seen_words:
                         continue
@@ -149,9 +158,24 @@ class WikipediaSearch:
                         'url': f"https://he.wikipedia.org/wiki/{title.replace(' ', '_')}"
                     })
 
+            # Log word length distribution for debugging
+            from collections import Counter
+            word_lengths = Counter(len(w) for w in all_extracted_words[:100])  # Sample first 100
+            logger.info(f"Wikipedia extracted {len(all_extracted_words)} total unique words")
+            logger.info(f"Word length distribution (sample): {dict(sorted(word_lengths.items()))}")
             logger.info(f"Wikipedia pattern search found {len(results)} unique words matching length {length}")
             if results:
                 logger.info(f"Sample Wikipedia results: {[r['word'] for r in results[:5]]}")
+            elif all_extracted_words:
+                # Show what we DID extract, even if it doesn't match length
+                sample_words_by_length = {}
+                for w in all_extracted_words[:30]:
+                    wlen = len(w)
+                    if wlen not in sample_words_by_length:
+                        sample_words_by_length[wlen] = []
+                    if len(sample_words_by_length[wlen]) < 3:
+                        sample_words_by_length[wlen].append(w)
+                logger.info(f"Sample extracted words by length: {sample_words_by_length}")
 
             return results
 
