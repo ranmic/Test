@@ -208,7 +208,7 @@ class WikipediaSearch:
 
     def _search_wiktionary_allpages(self, search_term: str, length: Optional[int] = None) -> List[Dict]:
         """
-        Search Hebrew Wiktionary for all pages (words) containing the search term.
+        Search Hebrew Wiktionary using SEARCH API for words containing the search term.
 
         Args:
             search_term: Hebrew letters to search for (must be IN the word)
@@ -221,73 +221,63 @@ class WikipediaSearch:
             results = []
             seen_words = set()
 
-            # For pattern matching, we want to get a broad list of Hebrew words
-            # Use Wiktionary's allpages API to get Hebrew words
             wiktionary_url = "https://he.wiktionary.org/w/api.php"
 
-            # To find words containing "ב", we need to search from ALL Hebrew letters
-            # Get words starting with each Hebrew letter (alef to tav)
-            hebrew_letters = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ', 'ק', 'ר', 'ש', 'ת']
+            # STRATEGY: Use Wiktionary's SEARCH API (more comprehensive than allpages)
+            # Search for the letter itself to find all words containing it
+            logger.info(f"Using Wiktionary SEARCH API for words containing '{search_term}'...")
 
-            # If we have a length requirement, search ALL letters (comprehensive)
-            # Otherwise just search the letters in search_term
-            letters_to_search = hebrew_letters if length else [search_term]
+            # Search Wiktionary for pages containing the search term
+            search_params = {
+                'action': 'query',
+                'format': 'json',
+                'list': 'search',
+                'srsearch': search_term,
+                'srlimit': 500,  # Get up to 500 results
+                'srnamespace': 0,  # Main namespace only
+            }
 
-            logger.info(f"Searching Wiktionary from {len(letters_to_search)} starting letters: {letters_to_search[:5]}...")
+            try:
+                response = self.session.get(wiktionary_url, params=search_params, timeout=10)
+                response.raise_for_status()
+                data = response.json()
 
-            for idx, start_letter in enumerate(letters_to_search):
-                params = {
-                    'action': 'query',
-                    'format': 'json',
-                    'list': 'allpages',
-                    'apfrom': start_letter,
-                    'aplimit': 100,  # Reduced from 500 to 100 per letter for faster response
-                    'apnamespace': 0,  # Main namespace only
-                }
+                search_results = data.get('query', {}).get('search', [])
+                logger.info(f"Wiktionary search returned {len(search_results)} pages")
 
-                try:
-                    response = self.session.get(wiktionary_url, params=params, timeout=5)
-                    response.raise_for_status()
-                    data = response.json()
+                for item in search_results:
+                    word = item['title']
 
-                    pages = data.get('query', {}).get('allpages', [])
-                    letter_matches = 0
+                    # Skip if already seen
+                    if word in seen_words:
+                        continue
 
-                    for page in pages:
-                        word = page['title']
+                    # Only keep Hebrew words (filter out Latin, special chars, etc.)
+                    if not any('\u0590' <= c <= '\u05FF' for c in word):
+                        continue
 
-                        # Skip if already seen
-                        if word in seen_words:
-                            continue
+                    # Filter by length if specified
+                    if length and len(word) != length:
+                        continue
 
-                        # Only keep Hebrew words (filter out Latin, special chars, etc.)
-                        if not any('\u0590' <= c <= '\u05FF' for c in word):
-                            continue
+                    # Check if word contains the search term
+                    if search_term in word:
+                        results.append({
+                            'word': word,
+                            'description': f'מילה מהוויקימילון העברי',
+                            'url': f"https://he.wiktionary.org/wiki/{word}"
+                        })
+                        seen_words.add(word)
 
-                        # Filter by length if specified
-                        if length and len(word) != length:
-                            continue
+                logger.info(f"Wiktionary search found {len(results)} words containing '{search_term}' with length {length}")
+                if results:
+                    logger.info(f"Sample Wiktionary words from SEARCH: {[r['word'] for r in results[:10]]}")
 
-                        # Check if word contains the search term
-                        if search_term in word:
-                            results.append({
-                                'word': word,
-                                'description': f'מילה מהוויקימילון העברי',
-                                'url': f"https://he.wiktionary.org/wiki/{word}"
-                            })
-                            seen_words.add(word)
-                            letter_matches += 1
+            except Exception as e:
+                logger.warning(f"Error in Wiktionary search: {e}")
 
-                    if letter_matches > 0:
-                        logger.info(f"  Letter '{start_letter}': found {letter_matches} matching words")
-
-                except Exception as e:
-                    logger.debug(f"Error fetching Wiktionary page for '{start_letter}': {e}")
-                    continue
-
-            logger.info(f"Wiktionary allpages search found {len(results)} words containing '{search_term}' with length {length}")
             return results
 
         except Exception as e:
-            logger.warning(f"Error searching Wiktionary allpages: {e}")
+            logger.warning(f"Error searching Wiktionary: {e}")
             return []
