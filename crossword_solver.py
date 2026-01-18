@@ -60,8 +60,9 @@ class CrosswordSolver:
                     result['wiki_url'] = wiki_result.get('url')
                     result['source'] = 'Dictionary + Wikipedia'
 
-            # Also search Wikipedia directly with pattern for more results
-            if pattern and not pattern.startswith('_'):
+            # ALWAYS search Wikipedia directly with pattern for comprehensive results
+            # Remove the restriction that prevented patterns starting with underscores
+            if pattern:
                 wiki_results = self.wiki_search.search_pattern(pattern, pattern_length)
                 for wiki_word in wiki_results:
                     if wiki_word['word'] not in seen_words:
