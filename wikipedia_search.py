@@ -229,17 +229,19 @@ class WikipediaSearch:
             # Get words starting with each Hebrew letter (alef to tav)
             hebrew_letters = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ', 'ק', 'ר', 'ש', 'ת']
 
-            # If we have a length requirement, we can be more aggressive
-            # Get words from multiple starting letters
-            letters_to_search = hebrew_letters if length else search_term
+            # If we have a length requirement, search ALL letters (comprehensive)
+            # Otherwise just search the letters in search_term
+            letters_to_search = hebrew_letters if length else [search_term]
 
-            for start_letter in letters_to_search[:10]:  # Limit to first 10 letters to avoid timeout
+            logger.info(f"Searching Wiktionary from {len(letters_to_search)} starting letters: {letters_to_search[:5]}...")
+
+            for idx, start_letter in enumerate(letters_to_search):
                 params = {
                     'action': 'query',
                     'format': 'json',
                     'list': 'allpages',
                     'apfrom': start_letter,
-                    'aplimit': 500,  # Get up to 500 words per letter
+                    'aplimit': 100,  # Reduced from 500 to 100 per letter for faster response
                     'apnamespace': 0,  # Main namespace only
                 }
 
@@ -249,6 +251,7 @@ class WikipediaSearch:
                     data = response.json()
 
                     pages = data.get('query', {}).get('allpages', [])
+                    letter_matches = 0
 
                     for page in pages:
                         word = page['title']
@@ -273,6 +276,10 @@ class WikipediaSearch:
                                 'url': f"https://he.wiktionary.org/wiki/{word}"
                             })
                             seen_words.add(word)
+                            letter_matches += 1
+
+                    if letter_matches > 0:
+                        logger.info(f"  Letter '{start_letter}': found {letter_matches} matching words")
 
                 except Exception as e:
                     logger.debug(f"Error fetching Wiktionary page for '{start_letter}': {e}")
