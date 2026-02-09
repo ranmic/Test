@@ -108,13 +108,21 @@ class WikipediaSearch:
             else:
                 regex_pattern += re.escape(char)  # Exact letter match
 
-        # Build search query using intitle: with known letters
-        # Wikipedia doesn't support regex in search, but we use regex for filtering
-        search_query = f'intitle:{known_letters}'
+        # Build SMART search query using ALL known letters with AND logic
+        # This reduces the number of results Wikipedia returns
+        # Wikipedia doesn't support regex, but we can use multiple intitle: operators
+        if len(known_letters) > 1:
+            # Multiple letters: use "intitle:letter1 intitle:letter2 ..." (implicit AND)
+            # This finds articles that contain ALL these letters in the title
+            letter_queries = [f'intitle:{letter}' for letter in known_letters]
+            search_query = ' '.join(letter_queries)
+        else:
+            # Single letter: just use intitle:letter
+            search_query = f'intitle:{known_letters}'
 
         logger.info(f"Converted pattern '{pattern}' to:")
-        logger.info(f"  - Search query: '{search_query}'")
-        logger.info(f"  - Regex pattern: '^{regex_pattern}$'")
+        logger.info(f"  - Search query: '{search_query}' (titles must contain ALL these letters)")
+        logger.info(f"  - Regex pattern: '^{regex_pattern}$' (ensures exact position match)")
 
         return search_query, f'^{regex_pattern}$'
 
