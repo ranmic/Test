@@ -83,32 +83,57 @@ class WikipediaSearch:
             logger.error(f"Unexpected error in Wikipedia search: {e}")
             return None
 
+    def _pattern_to_search_query(self, pattern: str) -> str:
+        """
+        Convert a pattern to an optimized Wikipedia search query using intitle:.
+
+        Args:
+            pattern: Pattern with _ for unknown letters (e.g., ____ב___)
+
+        Returns:
+            Search query string (e.g., "intitle:ב")
+        """
+        # Extract known letters from pattern
+        known_letters = pattern.replace('_', '')
+
+        if not known_letters:
+            return ''
+
+        # Build intitle: query to search specifically in article titles
+        # This is much more precise than searching in full text
+        search_query = f'intitle:{known_letters}'
+
+        logger.info(f"Converted pattern '{pattern}' to search query: '{search_query}'")
+        return search_query
+
     def search_pattern(self, pattern: str, length: Optional[int] = None) -> List[Dict]:
         """
         Search Wikipedia for words matching a pattern.
 
         Args:
-            pattern: Search pattern
+            pattern: Search pattern with _ for unknown letters (e.g., ____ב___)
             length: Word length filter
 
         Returns:
             List of matching words with descriptions
         """
         try:
-            # Remove underscores from pattern for search
-            search_term = pattern.replace('_', '')
+            # Build smart search query from pattern
+            search_query = self._pattern_to_search_query(pattern)
 
-            if not search_term:
-                logger.info("Wikipedia pattern search: Empty search term after removing underscores")
+            if not search_query:
+                logger.info("Wikipedia pattern search: Empty search query after conversion")
                 return []
 
-            logger.info(f"Wikipedia searching for pattern '{pattern}' (search term: '{search_term}', length: {length})")
+            logger.info(f"Wikipedia searching for pattern '{pattern}' (search query: '{search_query}', length: {length})")
 
             results = []
             seen_words = set()
 
             # STRATEGY 1: Search Wiktionary for comprehensive Hebrew word list
             logger.info("Strategy 1: Searching Hebrew Wiktionary word lists...")
+            # Extract just letters for Wiktionary search
+            search_term = pattern.replace('_', '')
             wiktionary_words = self._search_wiktionary_allpages(search_term, length)
             logger.info(f"Wiktionary returned {len(wiktionary_words)} candidate words")
             if wiktionary_words:
@@ -127,8 +152,8 @@ class WikipediaSearch:
                     results.append(word_data)
                     seen_words.add(word)
 
-            # STRATEGY 2: Search Wikipedia articles (original method)
-            logger.info("Strategy 2: Searching Wikipedia articles...")
+            # STRATEGY 2: Search Wikipedia articles with intitle:
+            logger.info("Strategy 2: Searching Wikipedia articles with intitle:...")
 
             # FIRST: Check if specific word exists in Wikipedia (for debugging)
             test_word = 'היפרבולה'
@@ -158,13 +183,13 @@ class WikipediaSearch:
             except Exception as e:
                 logger.debug(f"Test query error: {e}")
 
-            # Search Wikipedia - increased limit to get more results
+            # Search Wikipedia with improved intitle: query
             search_params = {
                 'action': 'query',
                 'format': 'json',
                 'list': 'search',
-                'srsearch': search_term,
-                'srlimit': 50,  # Increased from 10 to 50 for comprehensive results
+                'srsearch': search_query,  # Use smart search query instead of just letters
+                'srlimit': 50,
                 'utf8': 1
             }
 
@@ -173,7 +198,7 @@ class WikipediaSearch:
             data = response.json()
 
             search_results = data.get('query', {}).get('search', [])
-            logger.info(f"Wikipedia returned {len(search_results)} article results")
+            logger.info(f"Wikipedia returned {len(search_results)} article results for '{search_query}'")
 
             all_extracted_words = []
 
