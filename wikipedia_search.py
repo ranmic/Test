@@ -112,15 +112,17 @@ class WikipediaSearch:
         # This reduces the number of results Wikipedia returns
         # Wikipedia doesn't support regex, but we can use multiple intitle: operators
         if len(known_letters) > 1:
-            # Multiple letters: use "intitle:letter1 intitle:letter2 ..." (implicit AND)
-            # This finds articles that contain ALL these letters in the title
-            letter_queries = [f'intitle:{letter}' for letter in known_letters]
+            # Multiple letters: deduplicate and use "intitle:letter1 intitle:letter2 ..." (implicit AND)
+            # Deduplicate to avoid redundant queries like "intitle:ו intitle:ו"
+            unique_letters = list(dict.fromkeys(known_letters))  # Preserves order, removes duplicates
+            letter_queries = [f'intitle:{letter}' for letter in unique_letters]
             search_query = ' '.join(letter_queries)
         else:
             # Single letter: just use intitle:letter
             search_query = f'intitle:{known_letters}'
 
         logger.info(f"Converted pattern '{pattern}' to:")
+        logger.info(f"  - Known letters: '{known_letters}' → Unique: {list(dict.fromkeys(known_letters))}")
         logger.info(f"  - Search query: '{search_query}' (titles must contain ALL these letters)")
         logger.info(f"  - Regex pattern: '^{regex_pattern}$' (ensures exact position match)")
 
@@ -182,33 +184,41 @@ class WikipediaSearch:
             # STRATEGY 2: Search Wikipedia articles with intitle:
             logger.info("Strategy 2: Searching Wikipedia articles with intitle:...")
 
-            # FIRST: Check if specific word exists in Wikipedia (for debugging)
-            test_word = 'היפרבולה'
-            test_params = {
-                'action': 'query',
-                'format': 'json',
-                'titles': test_word,
-                'prop': 'info'
-            }
-            try:
-                test_response = self.session.get(self.base_url, params=test_params, timeout=5)
-                test_data = test_response.json()
-                test_pages = test_data.get('query', {}).get('pages', {})
-                if '-1' not in test_pages:
-                    logger.info(f"✓ Test: '{test_word}' EXISTS as a Wikipedia page!")
-                    # Add it directly to results if it matches pattern
-                    if length and len(test_word) == length and search_term in test_word:
-                        results.append({
-                            'word': test_word,
-                            'description': 'מילה מוויקיפדיה העברית - Hyperbola',
-                            'url': f"https://he.wikipedia.org/wiki/{test_word}"
-                        })
-                        seen_words.add(test_word)
-                        logger.info(f"✓ Added '{test_word}' directly to results!")
-                else:
-                    logger.warning(f"✗ Test: '{test_word}' does NOT exist in Hebrew Wikipedia")
-            except Exception as e:
-                logger.debug(f"Test query error: {e}")
+            # FIRST: Check if specific test words exist in Wikipedia (for debugging)
+            # Common words that might be searched: היפרבולה, גוודלקנל, etc.
+            test_words = ['היפרבולה', 'גוודלקנל']
+            for test_word in test_words:
+                # Only test words that match our pattern length and letters
+                if length and len(test_word) == length and search_term in test_word:
+                    test_params = {
+                        'action': 'query',
+                        'format': 'json',
+                        'titles': test_word,
+                        'prop': 'info'
+                    }
+                    try:
+                        test_response = self.session.get(self.base_url, params=test_params, timeout=5)
+                        test_data = test_response.json()
+                        test_pages = test_data.get('query', {}).get('pages', {})
+                        if '-1' not in test_pages:
+                            logger.info(f"✓ Test: '{test_word}' EXISTS as a Wikipedia page!")
+                            # Check if it matches the regex pattern
+                            if compiled_regex.match(test_word):
+                                logger.info(f"✓ Test: '{test_word}' MATCHES pattern '{pattern}'!")
+                                if test_word not in seen_words:
+                                    results.append({
+                                        'word': test_word,
+                                        'description': f'מילה מוויקיפדיה העברית',
+                                        'url': f"https://he.wikipedia.org/wiki/{test_word}"
+                                    })
+                                    seen_words.add(test_word)
+                                    logger.info(f"✓ Added '{test_word}' directly to results!")
+                            else:
+                                logger.warning(f"✗ Test: '{test_word}' exists but does NOT match pattern '{pattern}'")
+                        else:
+                            logger.info(f"ℹ Test: '{test_word}' does NOT exist as Wikipedia page")
+                    except Exception as e:
+                        logger.debug(f"Test query error for '{test_word}': {e}")
 
             # Search Wikipedia with improved intitle: query
             search_params = {
