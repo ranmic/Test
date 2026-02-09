@@ -83,28 +83,40 @@ class WikipediaSearch:
             logger.error(f"Unexpected error in Wikipedia search: {e}")
             return None
 
-    def _pattern_to_search_query(self, pattern: str) -> str:
+    def _pattern_to_search_query(self, pattern: str) -> tuple:
         """
-        Convert a pattern to an optimized Wikipedia search query using intitle:.
+        Convert a pattern to search query and regex for matching.
 
         Args:
             pattern: Pattern with _ for unknown letters (e.g., ____ב___)
 
         Returns:
-            Search query string (e.g., "intitle:ב")
+            Tuple of (search_query, regex_pattern)
         """
-        # Extract known letters from pattern
+        import re
+
+        # Extract known letters for Wikipedia search
         known_letters = pattern.replace('_', '')
 
-        if not known_letters:
-            return ''
+        # Convert pattern to regex for post-filtering
+        # _ becomes . (any Hebrew character)
+        # This ensures we only match Hebrew letters, not spaces or punctuation
+        regex_pattern = ''
+        for char in pattern:
+            if char == '_':
+                regex_pattern += '[\u0590-\u05FF]'  # Any Hebrew character
+            else:
+                regex_pattern += re.escape(char)  # Exact letter match
 
-        # Build intitle: query to search specifically in article titles
-        # This is much more precise than searching in full text
+        # Build search query using intitle: with known letters
+        # Wikipedia doesn't support regex in search, but we use regex for filtering
         search_query = f'intitle:{known_letters}'
 
-        logger.info(f"Converted pattern '{pattern}' to search query: '{search_query}'")
-        return search_query
+        logger.info(f"Converted pattern '{pattern}' to:")
+        logger.info(f"  - Search query: '{search_query}'")
+        logger.info(f"  - Regex pattern: '^{regex_pattern}$'")
+
+        return search_query, f'^{regex_pattern}$'
 
     def search_pattern(self, pattern: str, length: Optional[int] = None) -> List[Dict]:
         """
@@ -118,14 +130,21 @@ class WikipediaSearch:
             List of matching words with descriptions
         """
         try:
-            # Build smart search query from pattern
-            search_query = self._pattern_to_search_query(pattern)
+            import re as regex_module
+
+            # Build smart search query and regex pattern from user input
+            search_query, regex_pattern = self._pattern_to_search_query(pattern)
 
             if not search_query:
                 logger.info("Wikipedia pattern search: Empty search query after conversion")
                 return []
 
-            logger.info(f"Wikipedia searching for pattern '{pattern}' (search query: '{search_query}', length: {length})")
+            logger.info(f"Wikipedia searching for pattern '{pattern}'")
+            logger.info(f"  Using search query: '{search_query}'")
+            logger.info(f"  Using regex filter: '{regex_pattern}'")
+
+            # Compile regex for efficient matching
+            compiled_regex = regex_module.compile(regex_pattern)
 
             results = []
             seen_words = set()
@@ -226,6 +245,10 @@ class WikipediaSearch:
 
                     # Filter by length if specified
                     if length and len(word) != length:
+                        continue
+
+                    # Apply regex pattern matching to ensure exact match
+                    if not compiled_regex.match(word):
                         continue
 
                     seen_words.add(word)
